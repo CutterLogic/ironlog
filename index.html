@@ -202,10 +202,21 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
     </div>
   </div>
   <div id="timer-desc">Próxima serie lista</div>
-  <div class="timer-controls">
-    <button class="btn secondary small" onclick="addTime(-15)">−15s</button>
-    <button class="btn secondary small" onclick="addTime(15)">+15s</button>
-    <button class="btn small" onclick="skipTimer()">Saltar ↗</button>
+  <div class="timer-controls" style="flex-direction:column;align-items:center;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn secondary small" onclick="addTime(-15)">−15s</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <input id="timer-manual" type="number" min="5" max="600" value="90"
+          style="width:80px;background:var(--bg3);border:1px solid var(--dim);border-radius:8px;color:var(--amber);font-family:var(--mono);font-size:22px;font-weight:700;text-align:center;padding:6px 4px;outline:none"
+          oninput="setManualTime(this.value)">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase">seg</span>
+      </div>
+      <button class="btn secondary small" onclick="addTime(15)">+15s</button>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn secondary small" onclick="applyManualTime()">↺ Reiniciar</button>
+      <button class="btn small" onclick="skipTimer()">Saltar ↗</button>
+    </div>
   </div>
 </div>
 
@@ -264,6 +275,8 @@ function startTimer(seconds = 90) {
   clearInterval(timerInterval);
   timerTotal = seconds; timerLeft = seconds;
   timerCircle.style.strokeDasharray = circumference;
+  const inp = document.getElementById('timer-manual');
+  if (inp) inp.value = seconds;
   updateTimerDisplay();
   timerOverlay.classList.add('visible');
   timerInterval = setInterval(() => {
@@ -293,7 +306,20 @@ function skipTimer() { clearInterval(timerInterval); timerOverlay.classList.remo
 function addTime(delta) {
   timerLeft = Math.max(5, timerLeft + delta);
   timerTotal = Math.max(timerTotal, timerLeft);
+  const inp = document.getElementById('timer-manual');
+  if (inp) inp.value = timerLeft;
   updateTimerDisplay();
+}
+function setManualTime(val) {
+  const v = Math.max(5, Math.min(600, parseInt(val) || 5));
+  timerLeft = v;
+  timerTotal = v;
+  updateTimerDisplay();
+}
+function applyManualTime() {
+  const inp = document.getElementById('timer-manual');
+  const v = Math.max(5, Math.min(600, parseInt(inp?.value) || 90));
+  startTimer(v);
 }
 
 let audioCtx = null;
@@ -753,7 +779,7 @@ function renderExercises() {
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <button class="btn secondary small" onclick="goToProgressEx('${ex.id}')">📈</button>
-            ${ex.id.length < 6 ? '' : `<button class="btn secondary small" style="color:var(--danger)" onclick="deleteExercise('${ex.id}')">✕</button>`}
+            <button class="btn secondary small" style="color:var(--danger)" onclick="deleteExercise('${ex.id}')">✕</button>
           </div>
         </div>`;
       }).join('')}
