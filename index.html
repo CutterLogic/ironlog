@@ -30,8 +30,8 @@
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
-  /* Nav height = 56px buttons + safe-bottom */
-  --nav-h: calc(56px + env(safe-area-inset-bottom, 0px));
+  /* Nav height: button area (56px) + home indicator safe area */
+  --nav-h: calc(56px + max(env(safe-area-inset-bottom, 0px), 8px));
 }
 
 /* ── RESET ── */
@@ -45,72 +45,68 @@ a, button, input, select, textarea, [onclick] {
 input, select, textarea { font-size: 16px; }
 
 html {
-  height: 100%;
-  /* Use dynamic viewport height so Safari toolbar doesn't cut content */
+  /* dvh adapts when Safari toolbar shows/hides */
   height: 100dvh;
   background: var(--bg);
-  /* Prevent elastic bounce revealing white on overscroll */
   overflow: hidden;
   overscroll-behavior: none;
 }
 body {
-  height: 100%;
+  /* Match html exactly */
   height: 100dvh;
   background: var(--bg);
   color: var(--text);
   font-family: var(--cond);
   overflow: hidden;
   overscroll-behavior: none;
-  /* Top + sides safe area on body so ALL children inherit offset */
-  padding-top: var(--sat);
-  padding-left: var(--sal);
-  padding-right: var(--sar);
+  /* Safe area insets: top and sides only — bottom handled by nav */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 /* ── LAYOUT ── */
 #app {
   display: flex;
   flex-direction: column;
-  /* Fill body which already has safe-area padding */
-  height: 100%;
+  /* Subtract body's top padding so total = 100dvh */
+  height: calc(100dvh - env(safe-area-inset-top, 0px));
   max-width: 480px;
   margin: 0 auto;
   position: relative;
+  background: var(--bg);
 }
 
-/* Scrollable content area — leaves room for fixed nav */
+/* #view fills all remaining space between header and nav */
 #view {
   flex: 1;
+  min-height: 0; /* critical: allows flex child to shrink below content size */
   overflow-y: auto;
   overflow-x: hidden;
-  /* iOS momentum scrolling */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  /* bottom padding = nav height so last item isn't hidden */
+  /* bottom padding = nav height so last item is visible above nav */
   padding-bottom: var(--nav-h);
-  /* scrollbar hidden everywhere */
   scrollbar-width: none;
 }
 #view::-webkit-scrollbar { display: none; }
 
 /* ── NAV BAR ── */
-/* Use width:100% + left/right:0 instead of left:50%+transform to avoid
-   Safari stacking context bugs with position:fixed + transform */
 #nav {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  /* Center within max-width without transform */
+  left: env(safe-area-inset-left, 0px);
+  right: env(safe-area-inset-right, 0px);
   max-width: 480px;
+  /* Center when screen > 480px */
   margin: 0 auto;
   background: rgba(15,15,14,.97);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
   border-top: 1px solid var(--dim);
   display: flex;
-  /* Safe bottom padding so buttons sit above home indicator */
-  padding-bottom: max(var(--sab), 8px);
+  /* Pad bottom buttons above home indicator */
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
   z-index: 100;
 }
 .nav-btn {
